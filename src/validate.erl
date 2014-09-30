@@ -41,6 +41,18 @@ proplist([{Key, Type, Opts}|T], Data, Valid, Errors) ->
             proplist(T, Data, Valid, [{Key, Reason}|Errors])
     end.
 
+map(Rules, Data) -> map(Rules, Data, [], []).
+map([], _Data, Clean, []) -> {ok, Clean};
+map([], _Data, _Clean, Errors) -> {errors, Errors};
+map([{Key, Type, Opts}|T], Data, Valid, Errors) ->
+    Value = maps:get(Key, Data, <<>>),
+    case value(Value, Type, Opts) of
+        {Status, Converted} when Status =:= valid; Status =:= default ->
+            map(T, Data, [{Key, Converted}|Valid], Errors);
+        {invalid, Reason} ->
+            map(T, Data, Valid, [{Key, Reason}|Errors])
+    end.
+
 %% @doc Return trimmed value if args dictate it so.
 maybe_trim(Value, _Type, #args{trim = true}) -> trim(Value);
 maybe_trim(Value, _Type, #args{trim = false}) -> Value.
@@ -376,7 +388,7 @@ string_test() ->
         value(<<" hello ">>, string, [{trim, false}])),
     ?assertEqual({valid, <<"hello">>},
         value(<<" hello ">>, string, [{trim, true}])),
-    
+
     ?assertEqual({invalid, {shorter_than, 6}},
         value(<<"hello">>, string, [{min_len, 6}])),
     ?assertEqual({invalid, {longer_than, 2}},
