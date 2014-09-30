@@ -4,7 +4,7 @@
 
 %% http://stackoverflow.com/questions/11718898/check-string-for-email-with-regular-expressions-or-other-way
 -define(EMAIL_RE, "\\b[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*\\b").
-
+-define(UNAME_RE, "^[a-zA-Z][\-]?([a-zA-Z0-9][a-zA-Z0-9\-])*[a-zA-Z0-9]$").
 -define(DATE_FMT, <<"Y-m-d">>).
 -define(TIME_FMT, <<"H:M:S">>).
 -define(DATETIME_FMT, <<"Y-m-d H:M:S">>).
@@ -187,6 +187,11 @@ validations({valid, Value}, string, [{match, Re}|T]) ->
     case re:run(Value, Re) of
         {match, _} -> validations({valid, Value}, string, T);
         _ -> {invalid, no_match}
+    end;
+validations({valid, Value}, string, [username|T]) ->
+    case re:run(Value, ?UNAME_RE) of
+        {match, _} -> validations({valid, Value}, string, T);
+        _ -> {invalid, not_username}
     end;
 validations({valid, Value}, string, [email|T]) ->
     % ?EMAIL_RE was just copy/pasted from SO. i haven't thoroughly evaluated
